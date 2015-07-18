@@ -1,0 +1,7 @@
+development:
+  adapter: postgresql
+  encoding: unicode
+  database: test_app1
+  pool: 5
+  username: rahul
+  password: enbake

@@ -1,0 +1,13 @@
+<h3> Product </h3>
+
+<%= form_for :product, url: products_path do |f|%>
+<%= f.label :consumer_key, :class => 'col-sm-2 control-label' %>
+  <div class="col-sm-4"></br>
+  <%= f.text_field :consumer_key , :class => 'input-md form-control' %>
+</br></br>
+  <%= f.label :consumer_secret, :class => 'col-sm-2 control-label' %></br>
+  <div class="col-sm-4">
+  <%= f.text_field :consumer_secret, :class => 'input-md form-control' %>
+</br></br>
+<%= f.submit%>
+<% end %>

@@ -1,0 +1,24 @@
+<%= link_to 'Input Secret to fetch products', new_product_path %>
+<div class="table-responsive">
+    <table class="table table-hover dataTable">
+      <thead>
+        <th class="table-items">Name</th>
+        <th>Price</th>
+        <th>status</th>
+        <th></th>
+      </thead>
+     <% if @response.present? %>
+      <% @response.each do |response| %>
+        <tbody id='product-list'>
+          <td><%= response["title"]%></td>
+          <td><%= response["regular_price"]%></td>
+          <td><%= response["status"]%></td>
+      <% end %>
+      <%else%>
+      <td></td>
+      <td></td>
+      <td></td>
+      <%end%>
+        </tbody>
+    </table>
+  </div>
