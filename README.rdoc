@@ -1,28 +1,156 @@
 == README
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
-
-Things you may want to cover:
-
-* Ruby version
-
-* System dependencies
-
-* Configuration
-
-* Database creation
-
-* Database initialization
-
-* How to run the test suite
-
-* Services (job queues, cache servers, search engines, etc.)
-
-* Deployment instructions
-
-* ...
+Prerequisite:-
 
 
-Please feel free to use a different markup language if you do not plan to run
-<tt>rake doc:app</tt>.
+This blog works with Woocommerce 2.1 or latest version and REST Api must be enabled under Woocommerce > Settings. Also you must have enabled  pretty permalinks, as default permalinks will not work. 
+
+
+EndPoint :-
+
+
+https://www.your-store.com/wc-api/v2
+
+
+Note: I am referencing HTTPS. It is simpler and more recommended. If you are using HTTP, then please refer woocommerce rest api doc.
+
+
+Add to gemfile :-
+
+
+$ gem 'her'
+
+
+$ gem ‘faraday_middleware’
+
+#used to generate woocommerce token
+
+
+$ gem 'request_store’
+
+#used to get global values
+
+
+Usage :-
+
+
+Add this to your config/initializers/her.rb
+
+
+    Her::API.setup :url => “https://www.your-store.com/wc-api/v2” do |c|
+
+      # OAuth
+
+      c.use WoocommerceAuth
+
+
+      # Request
+
+      c.use WoocommerceToken
+
+      c.use Faraday::Request::Multipart
+
+      c.use Faraday::Request::UrlEncoded
+
+      c.use FaradayMiddleware::EncodeJson
+
+
+      # Response
+
+      c.use Her::Middleware::DefaultParseJSON
+
+
+      # Adapter
+
+      c.use Faraday::Adapter::NetHttp
+
+    end
+
+Add woocommerce_auth.rb file in app/lib
+
+class WoocommerceAuth < Faraday::Middleware
+  def call(env)
+    env[:request_headers]["Accept"] = 'application/json'
+    env[:request_headers]["Content-Type"] = RequestStore.store[:content_type].presence || 'application/json'
+    @app.call(env)
+  end
+end
+
+Add woocommerce_token.rb file in app/lib
+
+
+class WoocommerceToken < Faraday::Middleware
+  def call(env)
+    env[:request_headers]['Authorization'] = "#{RequestStore.store[:woocommerce_token]}"
+    @app.call(env)
+  end
+end
+
+
+Add in class where you need to make woocommerce apis call :-
+
+
+Class Product
+
+  include Her::Model
+
+end
+
+
+Now we are all set to integrate woocommerce apis. Example for product :- 
+
+
+  class Product
+
+    include Her::Model
+
+    collection_path '/wc-api/v2/products'
+
+    def initialize(fact)
+
+      begin
+
+        Hash fact
+
+        super
+
+      rescue => e
+
+        super(product: fact)
+
+      end
+
+    end
+
+
+  end
+
+
+You can add more classes based on information you required.
+
+Before you start fetching records you need to generate token based on your woocommerce consumer_key and consumer_secret.
+
+
+conn = Faraday.new
+
+token = conn.basic_auth(consumer_key, consumer_secret)
+
+ 
+
+
+To fetch products :-
+
+
+RequestStore.store[:woocommerce_token] = token
+
+product = Woocommerce::Product.all.fetch
+
+
+To update Product :-
+
+RequestStore.store[:woocommerce_token] = token
+
+Woocommerce::Product.save_existing “#{product_id}”, “#{product_details}”
+
+
+Refer Woocommerce Rest Api’s for more information
